@@ -11,3 +11,5 @@ This project will use Kaggle’s [Formula 1 World Championship](https://www.kagg
 - The dataset has been compiled using the [Ergast Developer API](http://ergast.com/mrd/) by the author of the dataset. At the time of creating this project, the dataset contains race data from 1950-2021 (MIND BLOWN 😱).
 - For future data, instead of downloading the dataset, I plan to directly use the API to get the latest race data (can also be implemented in Python)
 - The data could have been directly also read from the files, but this would mean that every time to run an analysis, we would have to read the files. Instead, we can just store it in a relational database. Also, with having the data in a DB, we can use other data analysis tools like Tableu to run analyses on the data.
+
+### _"Races are won at the track. Championships are won at the factory."_ - Mercedes (2019)
