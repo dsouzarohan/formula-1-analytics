@@ -1,6 +1,13 @@
 import psycopg2
+import src.config.config as config
 
-conn = psycopg2.connect(host="localhost", database="formula_1_db", user="postgres", password="admin123")
+db_config = config.get_db_config()
+print("Printing DB config in Conn Test", db_config)
+
+conn = psycopg2.connect(host=db_config['HOST']
+                        , database=db_config['DB']
+                        , user=db_config['USERNAME']
+                        , password=db_config['PASSWORD'])
 cur = conn.cursor()
 
 cur.execute("SELECT version()")
