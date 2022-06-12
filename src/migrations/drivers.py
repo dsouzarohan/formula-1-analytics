@@ -1,31 +1,29 @@
 import psycopg2
+from src.migrations.database import database as db
 
-query = """create table drivers
-(
-    id          integer not null primary key,
-    refname     varchar(100),
-    number      integer,
-    code        varchar(3),
-    forename    varchar(20),
-    dob         date,
-    nationality varchar(20),
-    url         varchar(100)
-)"""
 
-conn = None
+def up():
+    query = """create table drivers
+    (
+        id          integer not null primary key,
+        refname     varchar(100),
+        number      integer,
+        code        varchar(3),
+        forename    varchar(20),
+        dob         date,
+        nationality varchar(20),
+        url         varchar(100)
+    )"""
 
-try:
-    # connect and create table
-    conn = psycopg2.connect(host="localhost", database="formula_1_db", user="postgres", password="admin123")
-    cur = conn.cursor()
+    conn, err = db.get_connection()
+    if err:
+        print("Error in connecting with database", err)
+    curr = conn.cursor()
+    # TODO: Change query to create table based on DDL
 
-    # Create table 'drivers' in the pgdb
-    res = cur.execute(query)
-    print("Response",res)
-    conn.commit()
-except (Exception, psycopg2.DatabaseError) as err:
-    print(err)
-finally:
-    if conn is not None:
-        conn.close()
+    curr.execute("SELECT VERSION()")
+    db_version = curr.fetchone()
+    print(db_version)
+    conn.close()
 
+    # TODO: Create another function down() for down migrations
