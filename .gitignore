@@ -133,3 +133,6 @@ dmypy.json
 
 # data sources
 data/
+
+#playground
+playground/
