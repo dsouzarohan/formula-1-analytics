@@ -1,4 +1,4 @@
--- drop table results;
+drop table results;
 create table results
 (
     resultId integer not null primary key,

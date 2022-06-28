@@ -1,4 +1,4 @@
--- drop table qualifying;
+drop table qualifying;
 create table qualifying(
     qualifyId integer not null primary key,
     raceId int,

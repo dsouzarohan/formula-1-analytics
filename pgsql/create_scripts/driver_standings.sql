@@ -1,4 +1,4 @@
--- drop table driver_standings
+drop table driver_standings
 create table driver_standings
 (
     driverStandingsId integer not null primary key,

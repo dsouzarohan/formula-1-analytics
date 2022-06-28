@@ -1,4 +1,4 @@
--- drop table lap_times;
+drop table lap_times;
 create table lap_times
 (
     raceId int,

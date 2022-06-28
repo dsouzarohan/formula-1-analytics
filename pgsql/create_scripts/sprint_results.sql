@@ -1,4 +1,4 @@
--- drop table sprint_results;
+drop table sprint_results;
 create table sprint_results
 (
     sprintResultId integer not null primary key,
