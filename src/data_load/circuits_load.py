@@ -1,5 +1,6 @@
 from os.path import join
 from src.migrations.database import database as db
+from src.utilities.load_transforms import null_transform
 import csv
 
 # Dataset path, TODO: Move this to a config file so it can be changed
@@ -54,7 +55,7 @@ def load():
                 , 'country': row['country']
                 , 'lat': row['lat']
                 , 'lng': row['lng']
-                , 'alt': None if row['alt'].find('N') > 0 else row['alt']
+                , 'alt': null_transform(row['alt'])
                 , 'url': row['url']
                     }
 

@@ -1,5 +1,6 @@
 from os.path import join
 from src.migrations.database import database as db
+from src.utilities.load_transforms import null_transform
 import csv
 from datetime import datetime as dt
 
@@ -50,8 +51,8 @@ def load():
 
             data = {'driverId': row['driverId']
                 , 'refname': row['driverRef']
-                , 'number': None if row['number'].find('N') > 0 else row['number']
-                , 'code': None if row['code'].find('N') > 0 else row['code']
+                , 'number': null_transform(row['number'])
+                , 'code': null_transform(row['code'])
                 , 'forename': row['forename']
                 , 'surname': row['surname']
                 , 'dob': dt.strptime(row['dob'], '%Y-%m-%d').date()
