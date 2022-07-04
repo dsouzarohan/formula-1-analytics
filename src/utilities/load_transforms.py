@@ -1,15 +1,39 @@
 from datetime import datetime as dt, timedelta
 
 
-def time_transform(time_string):
-    if time_string == '':
+def date_transform(date_string):
+    if date_string == '' or date_string.find('N') > 0:
         return None
     else:
-        format_string = '%M:%S.%f' if time_string.count(":") == 1 else '%H:%M:%S.%f'
-        return None if time_string.find("\\N") > -1 else dt.strptime(time_string, format_string)
+        return dt.strptime(date_string, '%d/%m/%y').date()
+
+
+def time_of_day_transform(time_string):
+    if time_string == '' or time_string.find('N') > 0:
+        return None
+    else:
+        return dt.strptime(time_string, '%H:%M:%S').time()
+
+
+def time_transform(time_string):
+    if time_string == '' or time_string.find("\\N") > -1:
+        return None
+    else:
+        colon_count = time_string.count(":")
+        format_string = ''
+        match colon_count:
+            case 0:
+                format_string = '%S.%f'
+            case 1:
+                format_string = '%M:%S.%f'
+            case default:
+                format_string = '%H:%M:%S.%f'
+        return dt.strptime(time_string, format_string)
+
 
 def null_transform(data_string):
     return None if data_string.find("\\N") > -1 else data_string
+
 
 def delta_to_time(time, delta_string):
     if delta_string == '' or delta_string.find("\\N") > -1:

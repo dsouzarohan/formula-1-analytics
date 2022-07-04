@@ -14,16 +14,16 @@ def load():
     curr = conn.cursor()
 
     curr.execute("""
-        TRUNCATE TABLE SPRINT_RESULTS CASCADE 
+        TRUNCATE TABLE RESULTS CASCADE 
     """)
 
     conn.commit()
 
-    with open(join(path, "sprint_results.csv"), "r", encoding="utf8") as csvfile:
+    with open(join(path, "results.csv"), "r", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
         query = """
-        INSERT INTO SPRINT_RESULTS (
-            sprintResultId,
+        INSERT INTO RESULTS (
+            resultId,
             raceId,
             driverId,
             constructorId,
@@ -37,10 +37,12 @@ def load():
             time,
             timeInMillis,
             fastestLap,
+            rankFastestLap,
             fastestLapTime,
+            fastestLapSpeed,
             statusId
         ) VALUES (
-            %(sprintResultId)s,
+            %(resultId)s,
             %(raceId)s,
             %(driverId)s,
             %(constructorId)s,
@@ -54,47 +56,58 @@ def load():
             %(time)s,
             %(timeInMillis)s,
             %(fastestLap)s,
+            %(rankFastestLap)s,
             %(fastestLapTime)s,
+            %(fastestLapSpeed)s,
             %(statusId)s
         )
         """
 
         last_time = None
+        counter = 0
 
         for row in reader:
             print(row)
+            counter += 1
 
             delta_string = row['time']
             curr_time = None
 
             if delta_string.find('+') > -1:
                 curr_time = lt.delta_to_time(last_time, delta_string)
-            # elif delta_string.find('N') > -1:
-            #     curr_time = None
+            elif delta_string.find('\\N') > -1:
+                pass
             else:
                 last_time = lt.time_transform(delta_string)
                 curr_time = last_time
 
-            data = {'sprintResultId': row['resultId']
+            data = {'resultId': row['resultId']
                 , 'raceId': row['raceId']
                 , 'driverId': row['driverId']
                 , 'constructorId': row['constructorId']
-                , 'carNumber': row['number']
-                , 'gridPosition': row['grid']
+                , 'carNumber': lt.null_transform(row['number'])
+                , 'gridPosition': lt.null_transform(row['grid'])
                 , 'position': lt.null_transform(row['position'])
-                , 'positionText': row['positionText']
-                , 'positionOrder': row['positionOrder']
+                , 'positionText': lt.null_transform(row['positionText'])
+                , 'positionOrder': lt.null_transform(row['positionOrder'])
                 , 'points': row['points']
                 , 'laps': row['laps']
                 , 'time': curr_time.time() if curr_time is not None else None
                 , 'timeInMillis': lt.null_transform(row['milliseconds'])
                 , 'fastestLap': lt.null_transform(row['fastestLap'])
+                , 'rankFastestLap': lt.null_transform(row['rank'])
                 , 'fastestLapTime': lt.null_transform(row['fastestLapTime'])
+                , 'fastestLapSpeed': lt.null_transform(row['fastestLapSpeed'])
                 , 'statusId': row['statusId']
                     }
+            # print(data)
+            print("Last: ", last_time, "Curr: ", curr_time)
+            # if counter > 10:
+            #     break
 
             curr.execute(query, data)
-            last_time = curr_time
+            if curr_time is not None:
+                last_time = curr_time
 
         conn.commit()
         curr.close()

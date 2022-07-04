@@ -1,7 +1,7 @@
 from os.path import join
 from src.migrations.database import database as db
 import csv
-from src.utilities.load_transforms import time_of_day_transform, date_transform
+from src.utilities import load_transforms as lt
 
 # Dataset path, TODO: Move this to a config file so it can be changed
 path = "D:\\Documents\\Python Projects\\formula-1-analytics\\data\\external"
@@ -14,45 +14,43 @@ def load():
     curr = conn.cursor()
 
     curr.execute("""
-        TRUNCATE TABLE RACES CASCADE 
+        TRUNCATE TABLE PIT_STOPS CASCADE 
     """)
 
     conn.commit()
 
-    with open(join(path, "races.csv"), "r", encoding="utf8") as csvfile:
+    with open(join(path, "pit_stops.csv"), "r", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
         query = """
-        INSERT INTO RACES (
+        INSERT INTO PIT_STOPS (
             raceId,
-            year,
-            round,
-            circuitId,
-            name,
-            date,
+            driverId,
+            stop,
+            lap,
             time,
-            url
+            duration,
+            timeInMillis 
         ) VALUES (
             %(raceId)s,
-            %(year)s,
-            %(round)s,
-            %(circuitId)s,
-            %(name)s,
-            %(date)s,
+            %(driverId)s,
+            %(stop)s,
+            %(lap)s,
             %(time)s,
-            %(url)s         
+            %(duration)s,
+            %(timeInMillis)s 
         )
         """
 
         for row in reader:
+            print(row)
 
             data = {'raceId': row['raceId']
-                , 'year': row['year']
-                , 'round': row['round']
-                , 'circuitId': row['circuitId']
-                , 'name': row['name']
-                , 'date': date_transform(row['date'])
-                , 'time': time_of_day_transform(row['time'])
-                , 'url': row['url']
+                , 'driverId': row['driverId']
+                , 'stop': row['lap']
+                , 'lap': row['lap']
+                , 'time': lt.time_of_day_transform(row['time'])
+                , 'duration': lt.time_transform(row['duration']).time()
+                , 'timeInMillis': row['milliseconds']
                     }
 
             curr.execute(query, data)
