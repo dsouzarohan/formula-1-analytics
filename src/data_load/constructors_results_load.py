@@ -1,6 +1,7 @@
 import datetime
 from os.path import join
 from src.migrations.database import database as db
+from src.utilities.load_transforms import null_transform
 import csv
 
 # Dataset path, TODO: Move this to a config file so it can be changed
@@ -16,47 +17,46 @@ def load():
     curr = conn.cursor()
 
     curr.execute("""
-        TRUNCATE TABLE CONSTRUCTORS CASCADE 
+        TRUNCATE TABLE CONSTRUCTOR_RESULTS CASCADE 
     """)
 
     conn.commit()
 
-    with open(join(path, "constructors.csv"), "r", encoding="utf8") as csvfile:
+    with open(join(path, "constructor_results.csv"), "r", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
         query = """
-        INSERT INTO CONSTRUCTORS (
+        INSERT INTO CONSTRUCTOR_RESULTS (
+            constructorResultId,
+            raceId,
             constructorId,
-            constructorRef,
-            name,
-            nationality,
-            url
+            points,
+            status
         ) VALUES (
+            %(constructorResultId)s,
+            %(raceId)s,
             %(constructorId)s,
-            %(constructorRef)s,
-            %(name)s,
-            %(nationality)s,
-            %(url)s         
+            %(points)s,
+            %(status)s         
         )
         """
 
         start = datetime.datetime.now()
-        log_data_load("CONSTRUCTORS", "START", None, None)
+        log_data_load("CONSTRUCTOR_RESULTS", "START", None, None)
         count = 0
 
         for row in reader:
 
-            data = {'constructorId': row['constructorId']
-                , 'constructorRef': row['constructorRef']
-                , 'name': row['name']
-                , 'nationality': row['nationality']
-                , 'url': row['url']
+            data = {'constructorResultId': row['constructorResultsId']
+                , 'raceId': row['raceId']
+                , 'constructorId': row['constructorId']
+                , 'points': row['points']
+                , 'status': null_transform(row['status'])
                     }
 
             curr.execute(query, data)
-
             count += 1
 
-        log_data_load("CONSTRUCTORS", "END", start, count)
+        log_data_load("CONSTRUCTOR_RESULTS", "END", start, count)
 
         conn.commit()
         curr.close()

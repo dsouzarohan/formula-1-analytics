@@ -1,9 +1,12 @@
+import datetime
 from os.path import join
 from src.migrations.database import database as db
 from src.utilities import load_transforms as lt
 import csv
 
 # Dataset path, TODO: Move this to a config file so it can be changed
+from src.utilities.logger import log_data_load
+
 path = "D:\\Documents\\Python Projects\\formula-1-analytics\\data\\external"
 
 
@@ -64,11 +67,11 @@ def load():
         """
 
         last_time = None
-        counter = 0
+        start = datetime.datetime.now()
+        log_data_load("RESULTS", "START", None, None)
+        count = 0
 
         for row in reader:
-            print(row)
-            counter += 1
 
             delta_string = row['time']
             curr_time = None
@@ -100,14 +103,14 @@ def load():
                 , 'fastestLapSpeed': lt.null_transform(row['fastestLapSpeed'])
                 , 'statusId': row['statusId']
                     }
-            # print(data)
-            print("Last: ", last_time, "Curr: ", curr_time)
-            # if counter > 10:
-            #     break
 
             curr.execute(query, data)
+            count += 1
+
             if curr_time is not None:
                 last_time = curr_time
+
+        log_data_load("RESULTS", "END", start, count)
 
         conn.commit()
         curr.close()

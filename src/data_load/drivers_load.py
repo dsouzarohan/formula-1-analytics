@@ -1,3 +1,4 @@
+import datetime
 from os.path import join
 from src.migrations.database import database as db
 from src.utilities.load_transforms import null_transform
@@ -5,6 +6,8 @@ import csv
 from datetime import datetime as dt
 
 # Dataset path, TODO: Move this to a config file so it can be changed
+from src.utilities.logger import log_data_load
+
 path = "D:\\Documents\\Python Projects\\formula-1-analytics\\data\\external"
 
 
@@ -46,8 +49,11 @@ def load():
         )
         """
 
+        start = datetime.datetime.now()
+        log_data_load("DRIVERS", "START", None, None)
+        count = 0
+
         for row in reader:
-            print(row)
 
             data = {'driverId': row['driverId']
                 , 'refname': row['driverRef']
@@ -61,6 +67,9 @@ def load():
                     }
 
             curr.execute(query, data)
+            count += 1
+
+        log_data_load("DRIVERS", "END", start, count)
 
         conn.commit()
         curr.close()

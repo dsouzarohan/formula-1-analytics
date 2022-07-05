@@ -1,9 +1,12 @@
+import datetime
 from os.path import join
 from src.migrations.database import database as db
 import csv
 from src.utilities import load_transforms as lt
 
 # Dataset path, TODO: Move this to a config file so it can be changed
+from src.utilities.logger import log_data_load
+
 path = "D:\\Documents\\Python Projects\\formula-1-analytics\\data\\external"
 
 
@@ -45,8 +48,11 @@ def load():
         )
         """
 
+        start = datetime.datetime.now()
+        log_data_load("QUALIFYING", "START", None, None)
+        count = 0
+
         for row in reader:
-            print(row)
 
             q1 = lt.time_transform(row['q1'])
             q2 = lt.time_transform(row['q2'])
@@ -64,6 +70,9 @@ def load():
                     }
 
             curr.execute(query, data)
+            count += 1
+
+        log_data_load("QUALIFYING", "END", start, count)
 
         conn.commit()
         curr.close()

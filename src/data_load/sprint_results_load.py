@@ -1,9 +1,12 @@
+import datetime
 from os.path import join
 from src.migrations.database import database as db
 from src.utilities import load_transforms as lt
 import csv
 
 # Dataset path, TODO: Move this to a config file so it can be changed
+from src.utilities.logger import log_data_load
+
 path = "D:\\Documents\\Python Projects\\formula-1-analytics\\data\\external"
 
 
@@ -59,18 +62,19 @@ def load():
         )
         """
 
+        start = datetime.datetime.now()
+        log_data_load("SPRINT_RESULTS", "START", None, None)
+        count = 0
+
         last_time = None
 
         for row in reader:
-            print(row)
 
             delta_string = row['time']
             curr_time = None
 
             if delta_string.find('+') > -1:
                 curr_time = lt.delta_to_time(last_time, delta_string)
-            # elif delta_string.find('N') > -1:
-            #     curr_time = None
             else:
                 last_time = lt.time_transform(delta_string)
                 curr_time = last_time
@@ -95,6 +99,9 @@ def load():
 
             curr.execute(query, data)
             last_time = curr_time
+            count += 1
+
+        log_data_load("SPRINT_RESULTS", "END", start, count)
 
         conn.commit()
         curr.close()

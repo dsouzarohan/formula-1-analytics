@@ -1,8 +1,8 @@
 import datetime
 from os.path import join
 from src.migrations.database import database as db
+from src.utilities.load_transforms import null_transform
 import csv
-from src.utilities import load_transforms as lt
 
 # Dataset path, TODO: Move this to a config file so it can be changed
 from src.utilities.logger import log_data_load
@@ -17,49 +17,52 @@ def load():
     curr = conn.cursor()
 
     curr.execute("""
-        TRUNCATE TABLE LAP_TIMES CASCADE 
+        TRUNCATE TABLE CONSTRUCTOR_STANDINGS CASCADE 
     """)
 
     conn.commit()
 
-    with open(join(path, "lap_times.csv"), "r", encoding="utf8") as csvfile:
+    with open(join(path, "constructor_standings.csv"), "r", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
         query = """
-        INSERT INTO LAP_TIMES (
+        INSERT INTO CONSTRUCTOR_STANDINGS (
+            constructorStandingsId,
             raceId,
-            driverId,
-            lap,
+            constructorId,
+            points,
             position,
-            time,
-            timeInMillis 
+            positionText,
+            wins
         ) VALUES (
+            %(constructorStandingsId)s,
             %(raceId)s,
-            %(driverId)s,
-            %(lap)s,
+            %(constructorId)s,
+            %(points)s,
             %(position)s,
-            %(time)s,
-            %(timeInMillis)s 
+            %(positionText)s,         
+            %(wins)s         
         )
         """
 
         start = datetime.datetime.now()
-        log_data_load("LAP_TIMES", "START", None, None)
+        log_data_load("CONSTRUCTOR_STANDINGS", "START", None, None)
         count = 0
 
         for row in reader:
 
-            data = {'raceId': row['raceId']
-                , 'driverId': row['driverId']
-                , 'lap': row['lap']
+            data = {'constructorStandingsId': row['constructorStandingsId']
+                , 'raceId': row['raceId']
+                , 'constructorId': row['constructorId']
+                , 'points': row['points']
                 , 'position': row['position']
-                , 'time': lt.time_transform(row['time']).time()
-                , 'timeInMillis': row['milliseconds']
+                , 'positionText': row['positionText']
+                , 'wins': row['wins']
                     }
 
             curr.execute(query, data)
             count += 1
 
-        log_data_load("LAP_TIMES", "END", start, count)
+        log_data_load("CONSTRUCTOR_STANDINGS", "END", start, count)
 
         conn.commit()
         curr.close()

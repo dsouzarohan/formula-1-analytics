@@ -1,6 +1,8 @@
+import datetime
 from os.path import join
 from src.migrations.database import database as db
 from src.utilities.load_transforms import null_transform
+from src.utilities.logger import log_data_load
 import csv
 
 # Dataset path, TODO: Move this to a config file so it can be changed
@@ -45,9 +47,11 @@ def load():
         )
         """
 
-        for row in reader:
-            print(type(row))
+        start = datetime.datetime.now()
+        log_data_load("CIRCUITS", "START", None, None)
+        count = 0
 
+        for row in reader:
             data = {'circuitId': int(row['circuitId'])
                 , 'circuitRef': row['circuitRef']
                 , 'name': row['name']
@@ -59,9 +63,10 @@ def load():
                 , 'url': row['url']
                     }
 
-            print(data)
-
             curr.execute(query, data)
+            count += 1
+
+        log_data_load("CIRCUITS", "END", start, count)
 
         conn.commit()
         curr.close()
