@@ -5,7 +5,7 @@ def date_transform(date_string):
     if date_string == '' or date_string.find('N') > 0:
         return None
     else:
-        return dt.strptime(date_string, '%d/%m/%y').date()
+        return dt.strptime(date_string, '%Y-%m-%d').date()
 
 
 def time_of_day_transform(time_string):
