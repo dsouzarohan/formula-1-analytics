@@ -1,6 +1,6 @@
 import datetime
 from os.path import join
-from src.migrations.database import database as db
+from src.database import database as db
 from src.utilities.load_transforms import null_transform
 import csv
 
