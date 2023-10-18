@@ -1,0 +1,10 @@
+# NOTE: This is a sample config YAML
+# As I don't have different environments for this project
+# I add all my config related information here
+# Refer to SETUP.md for more details
+
+DATABASE:
+  USERNAME: pg_username
+  PASSWORD: pg_password
+  HOST: pg_hostname
+  DB: pg_database
