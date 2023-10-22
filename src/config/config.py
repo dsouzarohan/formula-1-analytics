@@ -1,9 +1,11 @@
 import os
 import yaml
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Targets /src directory
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # Points to root directory
+BASE_DIR = os.path.join(ROOT_DIR, 'src')  # Targets /src directory, code directory
+DATA_PATH = os.path.join(ROOT_DIR, 'data', 'external')  # Targets /data/external, CSVs are here
+LOGS_PATH = os.path.join(ROOT_DIR, 'logs')  # Targets /logs for logs
 CONFIG_PATH = os.path.join(BASE_DIR, 'config', 'config.yaml')  # Targets config.yaml
-
 
 def load_config() -> tuple[dict, None] | tuple[None, str]:
     try:
