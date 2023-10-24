@@ -140,3 +140,5 @@ playground/
 # logging
 logs/
 
+# config
+src/config/config.yaml

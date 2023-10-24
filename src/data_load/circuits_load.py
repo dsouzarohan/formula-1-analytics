@@ -3,10 +3,8 @@ from os.path import join
 from src.database import database as db
 from src.utilities.load_transforms import null_transform
 from src.utilities.logger import log_data_load
+from src.config.config import DATA_PATH
 import csv
-
-# Dataset path, TODO: Move this to a config file so it can be changed
-path = "D:\\Documents\\Python Projects\\formula-1-analytics\\data\\external"
 
 
 def load():
@@ -21,7 +19,7 @@ def load():
 
     conn.commit()
 
-    with open(join(path, "circuits.csv"), "r") as csvfile:
+    with open(join(DATA_PATH, "circuits.csv"), "r") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
         query = """
         INSERT INTO CIRCUITS (

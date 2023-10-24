@@ -1,13 +1,13 @@
 import psycopg2
 import src.config.config as config
+import database as db
 
-db_config = config.get_db_config()
-print("Printing DB config in Conn Test", db_config)
+conn, error = db.get_connection()
 
-conn = psycopg2.connect(host=db_config['HOST']
-                        , database=db_config['DB']
-                        , user=db_config['USERNAME']
-                        , password=db_config['PASSWORD'])
+if error:
+    print(f"Could not establish connection: {error}")
+    exit(1)
+
 cur = conn.cursor()
 
 cur.execute("SELECT version()")

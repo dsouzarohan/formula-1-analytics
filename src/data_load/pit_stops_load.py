@@ -3,11 +3,8 @@ from os.path import join
 from src.database import database as db
 import csv
 from src.utilities import load_transforms as lt
-
-# Dataset path, TODO: Move this to a config file so it can be changed
+from src.config.config import DATA_PATH
 from src.utilities.logger import log_data_load
-
-path = "D:\\Documents\\Python Projects\\formula-1-analytics\\data\\external"
 
 
 def load():
@@ -22,7 +19,7 @@ def load():
 
     conn.commit()
 
-    with open(join(path, "pit_stops.csv"), "r", encoding="utf8") as csvfile:
+    with open(join(DATA_PATH, "pit_stops.csv"), "r", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
         query = """
         INSERT INTO PIT_STOPS (
