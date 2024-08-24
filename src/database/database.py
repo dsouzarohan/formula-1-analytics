@@ -1,13 +1,14 @@
 import psycopg2
 import src.config.config as config
+from sys import exit
 
 config, error = config.load_config()
-db_config = config['DATABASE']
 
 if error:
     print(f"Could not load config: {error}")
     exit(1)
 
+db_config = config['DATABASE']
 
 def get_connection():
     try:
