@@ -1,5 +1,8 @@
 import datetime
 from os.path import join
+
+from psycopg2.extras import execute_batch
+
 from src.database import database as db
 import csv
 from src.config.config import DATA_PATH
@@ -25,25 +28,24 @@ def load():
             statusId,
             status
         ) VALUES (
-            %(statusId)s,
-            %(status)s       
+            %s,
+            %s       
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("STATUS", "START", None, None)
-        count = 0
+        insert_data = []
 
         for row in reader:
-
-            data = {'statusId': row['statusId']
-                , 'status': row['status']
-                    }
-
-            curr.execute(query, data)
-            count += 1
-
-        log_data_load("STATUS", "END", start, count)
+            insert_data.append(
+                (
+                    row['statusId'],
+                    row['status']
+                )
+            )
+        execute_batch(curr, query, insert_data)
+        log_data_load("STATUS", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()

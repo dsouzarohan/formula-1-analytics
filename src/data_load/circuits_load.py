@@ -5,6 +5,7 @@ from src.utilities.load_transforms import null_transform
 from src.utilities.logger import log_data_load
 from src.config.config import DATA_PATH
 import csv
+from psycopg2.extras import execute_batch
 
 
 def load():
@@ -14,7 +15,7 @@ def load():
     curr = conn.cursor()
 
     curr.execute("""
-        TRUNCATE TABLE CIRCUITS CASCADE 
+        TRUNCATE TABLE CIRCUITS CASCADE
     """)
 
     conn.commit()
@@ -33,38 +34,39 @@ def load():
             altitude,
             url
         ) VALUES (
-            %(circuitId)s,
-            %(circuitRef)s,
-            %(name)s,
-            %(location)s,
-            %(country)s,
-            %(lat)s,
-            %(lng)s,
-            %(alt)s,
-            %(url)s           
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s           
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("CIRCUITS", "START", None, None)
-        count = 0
+        insert_data = []
 
         for row in reader:
-            data = {'circuitId': int(row['circuitId'])
-                , 'circuitRef': row['circuitRef']
-                , 'name': row['name']
-                , 'location': row['location']
-                , 'country': row['country']
-                , 'lat': row['lat']
-                , 'lng': row['lng']
-                , 'alt': null_transform(row['alt'])
-                , 'url': row['url']
-                    }
+            insert_data.append(
+                (
+                    int(row['circuitId']),
+                    row['circuitRef'],
+                    row['name'],
+                    row['location'],
+                    row['country'],
+                    row['lat'],
+                    row['lng'],
+                    null_transform(row['alt']),
+                    row['url']
+                )
+            )
+        execute_batch(curr, query, insert_data)
 
-            curr.execute(query, data)
-            count += 1
-
-        log_data_load("CIRCUITS", "END", start, count)
+        log_data_load("CIRCUITS", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()

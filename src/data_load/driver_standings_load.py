@@ -1,5 +1,8 @@
 import datetime
 from os.path import join
+
+from psycopg2.extras import execute_batch
+
 from src.database import database as db
 import csv
 from src.utilities.logger import log_data_load
@@ -30,35 +33,35 @@ def load():
             positionText,
             wins
         ) VALUES (
-            %(driverStandingsId)s,
-            %(raceId)s,
-            %(driverId)s,
-            %(points)s,
-            %(position)s,
-            %(positionText)s,         
-            %(wins)s         
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,         
+            %s         
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("DRIVER_STANDINGS", "START", None, None)
-        count = 0
+        insert_data = []
 
         for row in reader:
+            insert_data.append(
+                (
+                    row["driverStandingsId"],
+                    row["raceId"],
+                    row["driverId"],
+                    row["points"],
+                    row["position"],
+                    row["positionText"],
+                    row["wins"]
+                )
+            )
 
-            data = {'driverStandingsId': row['driverStandingsId']
-                , 'raceId': row['raceId']
-                , 'driverId': row['driverId']
-                , 'points': row['points']
-                , 'position': row['position']
-                , 'positionText': row['positionText']
-                , 'wins': row['wins']
-                    }
-
-            curr.execute(query, data)
-            count += 1
-
-        log_data_load("DRIVER_STANDINGS", "END", start, count)
+        execute_batch(curr, query, insert_data)
+        log_data_load("DRIVER_STANDINGS", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()

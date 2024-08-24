@@ -1,5 +1,8 @@
 import datetime
 from os.path import join
+
+from psycopg2.extras import execute_batch
+
 from src.database import database as db
 import csv
 from src.utilities.load_transforms import time_of_day_transform, date_transform
@@ -32,37 +35,37 @@ def load():
             time,
             url
         ) VALUES (
-            %(raceId)s,
-            %(year)s,
-            %(round)s,
-            %(circuitId)s,
-            %(name)s,
-            %(date)s,
-            %(time)s,
-            %(url)s         
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s         
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("RACES", "START", None, None)
-        count = 0
+        insert_data = []
 
         for row in reader:
+            insert_data.append(
+                (
+                    row['raceId'],
+                    row['year'],
+                    row['round'],
+                    row['circuitId'],
+                    row['name'],
+                    date_transform(row['date']),
+                    time_of_day_transform(row['time']),
+                    row['url']
+                )
+            )
 
-            data = {'raceId': row['raceId']
-                , 'year': row['year']
-                , 'round': row['round']
-                , 'circuitId': row['circuitId']
-                , 'name': row['name']
-                , 'date': date_transform(row['date'])
-                , 'time': time_of_day_transform(row['time'])
-                , 'url': row['url']
-                    }
-
-            curr.execute(query, data)
-            count += 1
-
-        log_data_load("RACES", "END", start, count)
+        execute_batch(curr, query, insert_data)
+        log_data_load("RACES", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()

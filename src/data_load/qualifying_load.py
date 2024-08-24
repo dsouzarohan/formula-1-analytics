@@ -1,9 +1,13 @@
 import datetime
 from os.path import join
+
+from psycopg2.extras import execute_batch
+
 from src.database import database as db
 import csv
 from src.utilities import load_transforms as lt
 from src.config.config import DATA_PATH
+from src.utilities.logger import log_data_load
 
 
 def load():
@@ -32,21 +36,21 @@ def load():
             q2,
             q3
         ) VALUES (
-            %(qualifyId)s,
-            %(raceId)s,
-            %(driverId)s,
-            %(constructorId)s,
-            %(number)s,
-            %(position)s,
-            %(q1)s,
-            %(q2)s,
-            %(q3)s
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("QUALIFYING", "START", None, None)
-        count = 0
+        insert_data = []
 
         for row in reader:
 
@@ -54,21 +58,22 @@ def load():
             q2 = lt.time_transform(row['q2'])
             q3 = lt.time_transform(row['q3'])
 
-            data = {'qualifyId': row['qualifyId']
-                , 'raceId': row['raceId']
-                , 'driverId': row['driverId']
-                , 'constructorId': row['constructorId']
-                , 'number': row['number']
-                , 'position': row['position']
-                , 'q1': None if q1 is None else q1.time()
-                , 'q2': None if q2 is None else q2.time()
-                , 'q3': None if q3 is None else q3.time()
-                    }
+            insert_data.append(
+                (
+                    row["qualifyId"],
+                    row["raceId"],
+                    row["driverId"],
+                    row["constructorId"],
+                    row["number"],
+                    row["position"],
+                    None if q1 is None else q1.time(),
+                    None if q2 is None else q2.time(),
+                    None if q3 is None else q3.time(),
+                )
+            )
 
-            curr.execute(query, data)
-            count += 1
-
-        log_data_load("QUALIFYING", "END", start, count)
+        execute_batch(curr, query, insert_data)
+        log_data_load("QUALIFYING", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()

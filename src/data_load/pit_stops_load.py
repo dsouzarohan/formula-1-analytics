@@ -1,5 +1,8 @@
 import datetime
 from os.path import join
+
+from psycopg2.extras import execute_batch
+
 from src.database import database as db
 import csv
 from src.utilities import load_transforms as lt
@@ -31,35 +34,35 @@ def load():
             duration,
             timeInMillis 
         ) VALUES (
-            %(raceId)s,
-            %(driverId)s,
-            %(stop)s,
-            %(lap)s,
-            %(time)s,
-            %(duration)s,
-            %(timeInMillis)s 
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s 
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("PIT_STOPS", "START", None, None)
-        count = 0
+        insert_data = []
 
         for row in reader:
+            insert_data.append(
+                (
+                    row["raceId"],
+                    row["driverId"],
+                    row["lap"],
+                    row["lap"],
+                    lt.time_of_day_transform(row['time']),
+                    lt.time_transform(row['duration']).time(),
+                    row['milliseconds']
+                )
+            )
 
-            data = {'raceId': row['raceId']
-                , 'driverId': row['driverId']
-                , 'stop': row['lap']
-                , 'lap': row['lap']
-                , 'time': lt.time_of_day_transform(row['time'])
-                , 'duration': lt.time_transform(row['duration']).time()
-                , 'timeInMillis': row['milliseconds']
-                    }
-
-            curr.execute(query, data)
-            count += 1
-
-        log_data_load("PIT_STOPS", "END", start, count)
+        execute_batch(curr, query, insert_data)
+        log_data_load("PIT_STOPS", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()

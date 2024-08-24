@@ -1,5 +1,8 @@
 import datetime
 from os.path import join
+
+from psycopg2.extras import execute_batch
+
 from src.database import database as db
 from src.utilities import load_transforms as lt
 import csv
@@ -40,33 +43,32 @@ def load():
             fastestLapTime,
             statusId
         ) VALUES (
-            %(sprintResultId)s,
-            %(raceId)s,
-            %(driverId)s,
-            %(constructorId)s,
-            %(carNumber)s,
-            %(gridPosition)s,
-            %(position)s,
-            %(positionText)s,
-            %(positionOrder)s,
-            %(points)s,
-            %(laps)s,
-            %(time)s,
-            %(timeInMillis)s,
-            %(fastestLap)s,
-            %(fastestLapTime)s,
-            %(statusId)s
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("SPRINT_RESULTS", "START", None, None)
-        count = 0
+        insert_data = []
 
         last_time = None
 
         for row in reader:
-
             delta_string = row['time']
             curr_time = None
 
@@ -76,29 +78,30 @@ def load():
                 last_time = lt.time_transform(delta_string)
                 curr_time = last_time
 
-            data = {'sprintResultId': row['resultId']
-                , 'raceId': row['raceId']
-                , 'driverId': row['driverId']
-                , 'constructorId': row['constructorId']
-                , 'carNumber': row['number']
-                , 'gridPosition': row['grid']
-                , 'position': lt.null_transform(row['position'])
-                , 'positionText': row['positionText']
-                , 'positionOrder': row['positionOrder']
-                , 'points': row['points']
-                , 'laps': row['laps']
-                , 'time': curr_time.time() if curr_time is not None else None
-                , 'timeInMillis': lt.null_transform(row['milliseconds'])
-                , 'fastestLap': lt.null_transform(row['fastestLap'])
-                , 'fastestLapTime': lt.null_transform(row['fastestLapTime'])
-                , 'statusId': row['statusId']
-                    }
-
-            curr.execute(query, data)
+            insert_data.append(
+                (
+                    row['resultId'],
+                    row['raceId'],
+                    row['driverId'],
+                    row['constructorId'],
+                    row['number'],
+                    row['grid'],
+                    lt.null_transform(row['position']),
+                    row['positionText'],
+                    row['positionOrder'],
+                    row['points'],
+                    row['laps'],
+                    curr_time.time() if curr_time is not None else None,
+                    lt.null_transform(row['milliseconds']),
+                    lt.null_transform(row['fastestLap']),
+                    lt.null_transform(row['fastestLapTime']),
+                    row['statusId']
+                )
+            )
             last_time = curr_time
-            count += 1
 
-        log_data_load("SPRINT_RESULTS", "END", start, count)
+        execute_batch(curr, query, insert_data)
+        log_data_load("SPRINT_RESULTS", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()

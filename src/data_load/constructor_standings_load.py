@@ -1,5 +1,8 @@
 import datetime
 from os.path import join
+
+from psycopg2.extras import execute_batch
+
 from src.database import database as db
 import csv
 from src.config.config import DATA_PATH
@@ -30,35 +33,35 @@ def load():
             positionText,
             wins
         ) VALUES (
-            %(constructorStandingsId)s,
-            %(raceId)s,
-            %(constructorId)s,
-            %(points)s,
-            %(position)s,
-            %(positionText)s,         
-            %(wins)s         
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,         
+            %s         
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("CONSTRUCTOR_STANDINGS", "START", None, None)
-        count = 0
+        insert_data = []
 
         for row in reader:
+            insert_data.append(
+                (
+                    row["constructorStandingsId"],
+                    row["raceId"],
+                    row["constructorId"],
+                    row["points"],
+                    row["position"],
+                    row["positionText"],
+                    row["wins"]
+                )
+            )
 
-            data = {'constructorStandingsId': row['constructorStandingsId']
-                , 'raceId': row['raceId']
-                , 'constructorId': row['constructorId']
-                , 'points': row['points']
-                , 'position': row['position']
-                , 'positionText': row['positionText']
-                , 'wins': row['wins']
-                    }
-
-            curr.execute(query, data)
-            count += 1
-
-        log_data_load("CONSTRUCTOR_STANDINGS", "END", start, count)
+        execute_batch(curr, query, insert_data)
+        log_data_load("CONSTRUCTOR_STANDINGS", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()

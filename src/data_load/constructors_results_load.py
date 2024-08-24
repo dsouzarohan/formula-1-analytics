@@ -1,5 +1,8 @@
 import datetime
 from os.path import join
+
+from psycopg2.extras import execute_batch
+
 from src.database import database as db
 from src.utilities.load_transforms import null_transform
 import csv
@@ -29,30 +32,31 @@ def load():
             points,
             status
         ) VALUES (
-            %(constructorResultId)s,
-            %(raceId)s,
-            %(constructorId)s,
-            %(points)s,
-            %(status)s         
+            %s,
+            %s,
+            %s,
+            %s,
+            %s         
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("CONSTRUCTOR_RESULTS", "START", None, None)
-        count = 0
+        insert_data = []
 
         for row in reader:
-            data = {'constructorResultId': row['constructorResultsId']
-                , 'raceId': row['raceId']
-                , 'constructorId': row['constructorId']
-                , 'points': row['points']
-                , 'status': null_transform(row['status'])
-                    }
+            insert_data.append(
+                (
+                    row["constructorResultsId"],
+                    row["raceId"],
+                    row["constructorId"],
+                    row["points"],
+                    null_transform(row['status'])
+                )
+            )
 
-            curr.execute(query, data)
-            count += 1
-
-        log_data_load("CONSTRUCTOR_RESULTS", "END", start, count)
+        execute_batch(curr, query, insert_data)
+        log_data_load("CONSTRUCTOR_RESULTS", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()

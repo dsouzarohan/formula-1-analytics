@@ -1,5 +1,8 @@
 import datetime
 from os.path import join
+
+from psycopg2.extras import execute_batch
+
 from src.database import database as db
 from src.utilities.load_transforms import null_transform
 import csv
@@ -34,39 +37,39 @@ def load():
             nationality,
             url
         ) VALUES (
-            %(driverId)s,
-            %(refname)s,
-            %(number)s,
-            %(code)s,
-            %(forename)s,
-            %(surname)s,
-            %(dob)s,
-            %(nationality)s,
-            %(url)s         
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s         
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("DRIVERS", "START", None, None)
-        count = 0
+        insert_data = []
 
         for row in reader:
+            insert_data.append(
+                (
+                    row['driverId'],
+                    row['driverRef'],
+                    null_transform(row['number']),
+                    null_transform(row['code']),
+                    row['forename'],
+                    row['surname'],
+                    dt.strptime(row['dob'], '%Y-%m-%d').date(),
+                    row['nationality'],
+                    row['url']
+                )
+            )
+        execute_batch(curr, query, insert_data)
 
-            data = {'driverId': row['driverId']
-                , 'refname': row['driverRef']
-                , 'number': null_transform(row['number'])
-                , 'code': null_transform(row['code'])
-                , 'forename': row['forename']
-                , 'surname': row['surname']
-                , 'dob': dt.strptime(row['dob'], '%Y-%m-%d').date()
-                , 'nationality': row['nationality']
-                , 'url': row['url']
-                    }
-
-            curr.execute(query, data)
-            count += 1
-
-        log_data_load("DRIVERS", "END", start, count)
+        log_data_load("DRIVERS", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()

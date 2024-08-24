@@ -1,5 +1,8 @@
 import datetime
 from os.path import join
+
+from psycopg2.extras import execute_batch
+
 from src.database import database as db
 import csv
 from src.utilities.logger import log_data_load
@@ -25,25 +28,25 @@ def load():
             year,
             url
         ) VALUES (
-            %(year)s,
-            %(url)s       
+            %s,
+            %s       
         )
         """
 
         start = datetime.datetime.now()
         log_data_load("SEASONS", "START", None, None)
-        count = 0
+        insert_data = []
 
         for row in reader:
+            insert_data.append(
+                (
+                    row['year'],
+                    row['url']
+                )
+            )
 
-            data = {'year': row['year']
-                , 'url': row['url']
-                    }
-
-            curr.execute(query, data)
-            count += 1
-
-        log_data_load("SEASONS", "END", start, count)
+        execute_batch(curr, query, insert_data)
+        log_data_load("SEASONS", "END", start, len(insert_data))
 
         conn.commit()
         curr.close()
